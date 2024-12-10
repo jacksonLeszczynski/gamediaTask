@@ -11,10 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,10 +84,13 @@ public class CryptoCurrencyRestClientService extends AbstractExternalApiService<
         return executor;
     }
 
-    double getConversionRate(String fromCurrency, String toCurrency) {
+    private double getConversionRate(String fromCurrency, String toCurrency) {
         var response = getDataFromApi(fromCurrency, new FilterParameter(toCurrency));
 
-        return response.getRates().get(config.getFormatCurrency(toCurrency)).doubleValue();
+        return Optional.ofNullable(response.getRates())
+                .map(rates -> rates.get(config.getFormatCurrency(toCurrency)))
+                .map(Number::doubleValue)
+                .orElseThrow(() -> new IllegalStateException("Rates data is missing or invalid."));
     }
 
 }
